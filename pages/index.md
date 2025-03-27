@@ -5,7 +5,7 @@ description: Data Engineer specialized in building scalable data pipelines, robu
 art: random
 ---
 
-A big data nerd currently working my way through Georgia Tech's online CS Master's program. My journey started with a bachelors in Statistics & Data Science from UCLA, and I've been hooked on all things data ever since. [View my resume](/resume) for the full story.
+A big data nerd currently working my way through Georgia Tech's CS Master's program. Incoming Data Engineer Intern @ Honeywell. My journey started with a bachelors in Statistics & Data Science from UCLA, and I've been hooked on all things data ever since. [View my resume](/resume) for the full story.
 
 By day, I build data pipelines that don't fall over and ETL processes that actually deliver. I'm fascinated by the challenges of wrangling messy data into something useful—whether that's setting up real-time streaming systems or making sure databases talk to each other without throwing tantrums.
 
