@@ -130,6 +130,9 @@ export default defineConfig({
 
         md.use(MarkdownItMagicLink, {
           linksMap: {
+            'Honeywell': 'https://honeywell.com',
+            'UCLA': 'https://ucla.edu',
+            'Georgia Tech': 'https://gatech.edu',
             'Pandas': 'https://pandas.pydata.org/',
             'Python': 'https://www.python.org/',
             'JavaScript': 'https://www.javascript.com/',
@@ -174,6 +177,9 @@ export default defineConfig({
             ['https://nuxtlabs.com', 'https://github.com/nuxtlabs.png'],
             [/opencollective\.com\/vite/, 'https://github.com/vitejs.png'],
             [/opencollective\.com\/elk/, 'https://github.com/elk-zone.png'],
+            ['https://honeywell.com', 'https://www.sine.co/wp-content/uploads/2019/08/Honeywell-icon.png'],
+            ['https://ucla.edu', 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/The_University_of_California_UCLA.svg/300px-The_University_of_California_UCLA.svg.png'],
+            ['https://www.gatech.edu/', 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Georgia_Tech_seal.svg/300px-Georgia_Tech_seal.svg.png']
           ],
         })
 
