@@ -8,7 +8,7 @@ art: random
 Hey, I am Robert Lewis, a data engineer and big data enthusiast.
 
 M.S. in Computer Science student at {Georgia Tech}<br>
-Incoming Data Engineer Intern at {Honeywell}<br>
+Data Engineer Intern at {Honeywell}<br>
 Bachelor's in Statistics & Data Science from {UCLA}
 
 I build data pipelines that don't fall over and ETL processes that actually deliver. My passion lies in wrangling messy data into something useful—whether that's setting up real-time streaming systems or making databases talk to each other without throwing tantrums.
