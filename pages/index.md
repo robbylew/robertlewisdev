@@ -29,4 +29,6 @@ Find me on
   <a href="https://x.com/roberthedev" target="_blank"><span op75 i-ri-twitter-x-fill /> Twitter</a>
 </p>
 
-Or reach me at <a href="mailto:contact@robertlewis.dev"><span font-mono>contact<span i-
+Or reach me at <a href="mailto:contact@robertlewis.dev"><span font-mono>contact<span i-carbon-at/>robertlewis.dev</span></a>
+
+---
