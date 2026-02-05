@@ -8,7 +8,6 @@ art: random
 Hey, I am Robert Lewis, a machine learning engineer and AI enthusiast.
 
 M.S. in Computer Science student at {Georgia Tech}<br>
-Machine Learning Engineer Intern at {Honeywell}<br>
 Bachelor's in Statistics & Data Science from {UCLA}
 
 I build ML models that actually work in production and MLOps pipelines that scale. My passion lies in transforming complex algorithms into deployable solutions—whether that's optimizing neural networks for edge devices or building automated training pipelines that keep models fresh and performant.
