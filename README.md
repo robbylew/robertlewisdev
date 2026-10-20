@@ -72,7 +72,7 @@ Hosted on Cloudflare Pages (project `robertlewisdev-v2`), deployed on every push
 - Response headers (security, caching) and redirects live in `public/_headers` and `public/_redirects`
 - pnpm's supply-chain policies (release-age cooldown, trust checks) are configured in `pnpm-workspace.yaml`
 
-`www.robertlewis.dev` permanently redirects to `robertlewis.dev` via a tiny Cloudflare Worker that only runs on the `www` route (source in `workers/www-redirect/`). Redeploy it after changes with `npx wrangler deploy --config workers/www-redirect/wrangler.jsonc`.
+`robertlewis.dev` is the canonical domain. Redirect `www` to it with an account-level Bulk Redirect (Pages custom domains bypass Workers routes): in the Cloudflare dashboard open **Bulk Redirects**, create a list with source `www.robertlewis.dev` → target `https://robertlewis.dev`, status `301`, and enable *Preserve query string*, *Subpath matching*, *Preserve path suffix* and *Include subdomains*; then create a Bulk Redirect rule that uses the list.
 
 Search engines: verify the domain in [Google Search Console](https://search.google.com/search-console) (choose **Domain** property; Cloudflare can add the DNS record automatically), submit `https://robertlewis.dev/sitemap.xml`, then import the site into [Bing Webmaster Tools](https://www.bing.com/webmasters) from Search Console.
 
