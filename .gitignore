@@ -1,9 +1,12 @@
 # Node modules
 node_modules/
-pnpm-lock.yaml
 # Vite build output
 dist/
 .vite/
+.vite-ssg-temp/
+
+# Cloudflare Wrangler local state
+.wrangler/
 
 # Logs
 npm-debug.log*

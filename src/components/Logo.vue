@@ -1,53 +1,52 @@
+<script setup lang="ts">
+import { useId } from 'vue'
+import { LOGO_KNOCKOUT } from '~/logo'
+
+const gradientId = `${useId()}-logo-accent`
+</script>
+
 <template>
-  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <g id="svgGroup" stroke-linecap="round" fill-rule="evenodd" font-size="9pt" stroke-width="0.25mm" fill="#000" style="stroke:#000;stroke-width:0.25mm;fill:#000">
-      <path d="M2.821 63.336H0V21.476h2.821v41.86zM2.821 37.765l-1.911-.546a24.296 24.296 0 0 1 .456-4.858q.596-2.922 1.975-5.163a13.095 13.095 0 0 1 1.801-2.309 14.17 14.17 0 0 1 10.304-4.321 18.556 18.556 0 0 1 .297-.002 15.471 15.471 0 0 1 4.714.707 14.401 14.401 0 0 1 1.064.385 13.672 13.672 0 0 1 3.647 2.227 16.913 16.913 0 0 1 1.313 1.231l-1.911 2.093a13.22 13.22 0 0 0-1.974-1.786 10.275 10.275 0 0 0-2.166-1.217 11.945 11.945 0 0 0-2.725-.736 16.052 16.052 0 0 0-2.417-.174 13.271 13.271 0 0 0-4.311.672 11.198 11.198 0 0 0-4.698 3.104q-3.04 3.321-3.407 8.067a25.488 25.488 0 0 0-.051 1.626zM37.765 63.336H34.944V0h2.821v63.336z" id="0" class="path1" />
-    </g>
+  <svg class="logo" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient :id="gradientId" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2dd4bf" />
+        <stop offset="1" stop-color="#818cf8" />
+      </linearGradient>
+    </defs>
+    <path fill="currentColor" fill-rule="evenodd" :d="LOGO_KNOCKOUT" />
+    <path class="logo-accent" :fill="`url(#${gradientId})`" fill-rule="evenodd" :d="LOGO_KNOCKOUT" />
   </svg>
 </template>
 
 <style scoped>
-@media (prefers-reduced-motion) {
-  .path1 {
-    animation: none !important;
-    stroke-dasharray: unset !important;
-  }
+.logo {
+  overflow: visible;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-@media print {
-  .path1 {
-    animation: none !important;
-    stroke-dasharray: unset !important;
-  }
+
+.logo-accent {
+  opacity: 0;
+  transition: opacity 0.35s ease;
 }
-@keyframes grow {
-  0% {
-    stroke-dashoffset: 1px;
-    stroke-dasharray: 0 350px;
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  40% {
-    stroke-dasharray: 350px 0;
-  }
-  85% {
-    stroke-dasharray: 350px 0;
-  }
-  95%,
-  to {
-    stroke-dasharray: 0 350px;
-  }
+
+.group:hover .logo,
+.group:focus-visible .logo {
+  transform: rotate(-8deg) scale(1.06);
 }
-.path1 {
-  stroke-dashoffset: 1px;
-  stroke-dasharray: 350px 0;
-  animation: grow 10s ease forwards infinite;
-  transform-origin: center;
-  stroke: #ffffff;
-  animation-delay: 0s;
+
+.group:hover .logo-accent,
+.group:focus-visible .logo-accent {
+  opacity: 1;
 }
-.dark .path1 {
-  stroke: #FFFFFF;
+
+@media (prefers-reduced-motion: reduce) {
+  .logo {
+    transition: none;
+  }
+
+  .group:hover .logo,
+  .group:focus-visible .logo {
+    transform: none;
+  }
 }
 </style>

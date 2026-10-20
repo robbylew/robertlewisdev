@@ -1,81 +1,52 @@
 <script setup lang="ts">
-import RobertLewis from "~/components/icons/RobertLewis.vue";
+import { projects } from '~/data/projects'
 
-defineProps<{ projects: Record<string, any[]> }>()
-
-function slug(name: string) {
-  return name.toLowerCase().replace(/[\s\\\/]+/g, '-')
+function slugify(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 </script>
 
 <template>
-  <div class="max-w-300 mx-auto">
-    <p text-center mt--6 mb5 op50 text-lg italic>
-  A collection of my projects including open source contributions.
+  <div class="mx-auto max-w-5xl">
+    <p class="mb-10 text-center text-lg color-muted slide-enter">
+      Things I've built — from ML systems and data pipelines to open source contributions.
     </p>
-    <div
-      v-for="key, cidx in Object.keys(projects)" :key="key" slide-enter
+    <section
+      v-for="(items, category, cidx) in projects"
+      :key="category"
+      class="project-section slide-enter"
       :style="{ '--enter-stage': cidx + 1 }"
+      :aria-labelledby="slugify(String(category))"
     >
-      <div
-        :id="slug(key)"
-        select-none relative h20 pointer-events-none slide-enter
-        :style="{
-          '--enter-stage': cidx - 2,
-          '--enter-step': '60ms',
-        }"
-      >
-        <span text-5em color-transparent absolute left--1rem top-0rem font-bold leading-1em text-stroke-1.5 text-stroke-hex-aaa op35 dark:op20>{{ key }}</span>
-      </div>
-      <div
-        class="project-grid py-2 max-w-500 w-max mx-auto"
-        grid="~ cols-1 md:cols-2 gap-4 lg:cols-3"
-      >
-        <a
-          v-for="item, idx in projects[key]"
-          :key="idx"
-          class="item relative flex items-center"
-          :href="item.link"
-          :title="item.name"
-        >
-          <div v-if="item.icon" class="pt-2 pr-5">
-            <Slidev v-if="item.icon === 'slidev'" class="text-4xl opacity-50" />
-            <RobertLewis v-else-if="item.icon === 'rl'" class="text-4xl opacity-50" />
-            <div v-else class="text-3xl opacity-50" :class="item.icon || 'i-carbon-unknown'" />
-          </div>
-          <div class="flex-auto">
-            <div class="text-normal">{{ item.name }}</div>
-            <div class="desc text-sm opacity-50 font-normal" v-html="item.desc" />
-          </div>
-        </a>
-      </div>
-    </div>
-  </div>
-  <div>
-    <div class="table-of-contents">
-      <div class="table-of-contents-anchor">
-        <div class="i-ri-menu-2-fill" />
-      </div>
-      <ul>
-        <li v-for="key of Object.keys(projects)" :key="key">
-          <a :href="`#${slug(key)}`">{{ key }}</a>
+      <h2 :id="slugify(String(category))" class="category-heading">
+        {{ category }}
+      </h2>
+      <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <li v-for="project in items" :key="project.name">
+          <ProjectCard :project="project" />
         </li>
       </ul>
-    </div>
+    </section>
   </div>
 </template>
 
 <style scoped>
-.project-grid a.item {
-  background: transparent;
-  font-size: 1.1rem;
-  width: 350px;
-  max-width: 100%;
-  padding: 0.5rem 0.875rem 0.875rem;
-  border-radius: 6px;
+.project-section + .project-section {
+  margin-top: 3.5rem;
 }
 
-.project-grid a.item:hover {
-  background: #88888811;
+.category-heading {
+  margin: 0 0 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-fg);
+  scroll-margin-top: 5rem;
+}
+
+.project-section > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 </style>

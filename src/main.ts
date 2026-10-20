@@ -1,59 +1,75 @@
-import "@unocss/reset/tailwind.css";
-import "floating-vue/dist/style.css";
-import "markdown-it-github-alerts/styles/github-colors-light.css";
-import "markdown-it-github-alerts/styles/github-colors-dark-class.css";
-import "markdown-it-github-alerts/styles/github-base.css";
-import "@shikijs/twoslash/style-rich.css";
-import "shiki-magic-move/style.css";
-import "./styles/main.css";
-import "./styles/prose.css";
-import "./styles/markdown.css";
+import NProgress from 'nprogress'
+import { ViteSSG } from 'vite-ssg'
+import { routes } from 'vue-router/auto-routes'
+import App from './App.vue'
+import { onIdle } from './logics'
+import '@fontsource-variable/inter/wght.css'
+import '@fontsource/dm-mono/400.css'
+import '@fontsource/dm-mono/500.css'
+import '@unocss/reset/tailwind.css'
+import 'markdown-it-github-alerts/styles/github-colors-light.css'
+import 'markdown-it-github-alerts/styles/github-colors-dark-class.css'
+import 'markdown-it-github-alerts/styles/github-base.css'
 
-import "uno.css";
-
-import { routes } from "vue-router/auto-routes";
-import NProgress from "nprogress";
-import { ViteSSG } from "vite-ssg";
-import dayjs from "dayjs";
-import LocalizedFormat from "dayjs/plugin/localizedFormat.js";
-import { setupRouterScroller } from "vue-router-better-scroller";
-import FloatingVue from "floating-vue";
-import { createPinia } from "pinia";
-import App from "./App.vue";
+import './styles/main.css'
+import './styles/prose.css'
+import './styles/markdown.css'
+import 'uno.css'
 
 export const createApp = ViteSSG(
   App,
   {
     routes,
+    scrollBehavior(to, from, savedPosition) {
+      // Skip entrance animations when restoring a scroll position (back/forward).
+      if (typeof document !== 'undefined')
+        document.documentElement.classList.toggle('no-sliding', Boolean(savedPosition))
+      if (savedPosition)
+        return savedPosition
+      if (to.hash)
+        return { el: decodeURIComponent(to.hash), top: 80 }
+      if (to.path !== from.path)
+        return { top: 0 }
+    },
   },
-  ({ router, app, isClient }) => {
-    dayjs.extend(LocalizedFormat);
+  ({ router }) => {
+    if (import.meta.env.SSR)
+      return
 
-    app.use(FloatingVue);
-    app.use(createPinia());
+    NProgress.configure({ showSpinner: false, trickleSpeed: 120 })
+    let timer: ReturnType<typeof setTimeout> | undefined
+    router.beforeEach((to, from) => {
+      // Only show the bar when a navigation is noticeably slow.
+      if (to.path !== from.path)
+        timer = setTimeout(() => NProgress.start(), 150)
+    })
+    router.afterEach(() => {
+      clearTimeout(timer)
+      NProgress.done()
+    })
+    router.onError(() => {
+      clearTimeout(timer)
+      NProgress.done()
+    })
 
-    if (isClient) {
-      const html = document.querySelector("html")!;
-      setupRouterScroller(router, {
-        selectors: {
-          html(ctx) {
-            // only do the sliding transition when the scroll position is not 0
-            // Disable sliding transition on Dev Mode
-            if (ctx.savedPosition?.top || import.meta.hot)
-              html.classList.add("no-sliding");
-            else html.classList.remove("no-sliding");
-            return true;
-          },
-        },
-        behavior: "auto",
-      });
-
-      router.beforeEach(() => {
-        NProgress.start();
-      });
-      router.afterEach(() => {
-        NProgress.done();
-      });
-    }
+    // Warm up every page chunk once idle so client-side navigation is instant.
+    router.isReady().then(() => {
+      const connection = (navigator as Navigator & { connection?: { saveData?: boolean, effectiveType?: string } }).connection
+      if (connection?.saveData || /2g/.test(connection?.effectiveType ?? ''))
+        return
+      onIdle(() => {
+        for (const route of router.getRoutes()) {
+          for (const component of Object.values(route.components ?? {})) {
+            if (typeof component !== 'function')
+              continue
+            try {
+              Promise.resolve((component as () => unknown)()).catch(() => {})
+            }
+            catch {}
+          }
+        }
+      }, 4000)
+    })
   },
-);
+  { hydration: true },
+)

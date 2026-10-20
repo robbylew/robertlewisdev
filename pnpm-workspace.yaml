@@ -1,0 +1,17 @@
+# pnpm settings — supply-chain policies are enforced by default in pnpm 11+.
+
+# Versions newer than the default release-age cooldown that were reviewed and allowed.
+minimumReleaseAgeExcludePrune: true
+minimumReleaseAgeExclude:
+  - satori@0.63.0
+
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # Required by @types/node@22. Published by an undici maintainer like every other 6.x release,
+  # before undici moved to provenance-signed CI publishing in 7.x — not a takeover (verified).
+  - undici-types@6.21.0
+
+shellEmulator: true
+# Dependencies allowed to run install scripts.
+allowBuilds:
+  esbuild: true

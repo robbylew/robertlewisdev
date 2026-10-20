@@ -1,0 +1,30 @@
+# Cloudflare Pages redirects — https://developers.cloudflare.com/pages/configuration/redirects/
+
+# Short links
+/github       https://github.com/robbylew               301
+/gh           https://github.com/robbylew               301
+/linkedin     https://www.linkedin.com/in/robbylew/     301
+/x            https://x.com/roberthedev                 301
+/twitter      https://x.com/roberthedev                 301
+/instagram    https://instagram.com/robbylew            301
+/ig           https://instagram.com/robbylew            301
+
+# Aliases
+/blog         /blogs                                    301
+/posts        /blogs                                    301
+/cv           /resume                                   301
+/resume.pdf   /Robert_Lewis_Resume.pdf                  301
+/rss          /feed.xml                                 301
+/rss.xml      /feed.xml                                 301
+/feed         /feed.xml                                 301
+/sitemap      /sitemap.xml                              301
+
+# Moved/renamed assets (keep old indexed URLs working)
+/og.png                       /og/index.png                          301
+/hannah1.jpeg                 /images/hannah/hannah-1.webp           301
+/hannah2.jpeg                 /images/hannah/hannah-2.webp           301
+/hannah3.jpeg                 /images/hannah/hannah-3.webp           301
+/images/20hzat40hz.png        /images/20hzat40hz.webp                301
+/images/20hzat30hz.png        /images/20hzat30hz.webp                301
+/images/8levelquant.png       /images/8levelquant.webp               301
+/images/64levelquant.png      /images/64levelquant.webp              301

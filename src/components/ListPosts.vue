@@ -1,132 +1,183 @@
 <script setup lang="ts">
 import type { Post } from '~/types'
-import { useRouter } from 'vue-router/auto'
 import { formatDate } from '~/logics'
+import { getPosts } from '~/logics/posts'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   type?: string
-  posts?: Post[]
-  extra?: Post[]
-}>()
+  /** Maximum number of posts to show. */
+  limit?: number
+  /** Flat list without year headings (used on the home page). */
+  compact?: boolean
+}>(), {
+  type: 'blog',
+})
 
 const router = useRouter()
-const routes: Post[] = router.getRoutes()
-  .filter(i => i.path.startsWith('/posts') && i.meta.frontmatter.date && !i.meta.frontmatter.draft)
-  .filter(i => !i.path.endsWith('.html') && (i.meta.frontmatter.type || 'blog').split('+').includes(props.type))
-  .map(i => ({
-    path: i.meta.frontmatter.redirect || i.path,
-    title: i.meta.frontmatter.title,
-    date: i.meta.frontmatter.date,
-    duration: i.meta.frontmatter.duration,
-    recording: i.meta.frontmatter.recording,
-    upcoming: i.meta.frontmatter.upcoming,
-    redirect: i.meta.frontmatter.redirect,
-    place: i.meta.frontmatter.place,
-  }))
 
-const posts = computed(() =>
-  [...(props.posts || routes), ...props.extra || []]
-    .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-)
+const posts = computed(() => {
+  const all = getPosts(router, props.type)
+  return props.limit ? all.slice(0, props.limit) : all
+})
 
-const getYear = (a: Date | string | number) => new Date(a).getFullYear()
-const isFuture = (a?: Date | string | number) => a && new Date(a) > new Date()
-const isSameYear = (a?: Date | string | number, b?: Date | string | number) => a && b && getYear(a) === getYear(b)
-function isSameGroup(a: Post, b?: Post) {
-  return (isFuture(a.date) === isFuture(b?.date)) && isSameYear(a.date, b?.date)
-}
-
-function getGroupName(p: Post) {
-  if (isFuture(p.date))
-    return 'Upcoming'
-  return getYear(p.date)
-}
+const groups = computed(() => {
+  const result: { year: string, posts: Post[] }[] = []
+  for (const post of posts.value) {
+    const year = post.date.slice(0, 4)
+    if (result.at(-1)?.year !== year)
+      result.push({ year, posts: [] })
+    result.at(-1)!.posts.push(post)
+  }
+  return result
+})
 </script>
 
 <template>
-  <ul>
-    <template v-if="!posts.length">
-      <div py2 op50>
-        { nothing here yet }
-      </div>
-    </template>
+  <p v-if="!posts.length" class="py-2 color-faint">
+    { nothing here yet }
+  </p>
 
-    <template v-for="route, idx in posts" :key="route.path">
-      <div
-        v-if="!isSameGroup(route, posts[idx - 1])"
-        select-none relative h20 pointer-events-none slide-enter
-        :style="{
-          '--enter-stage': idx - 2,
-          '--enter-step': '60ms',
-        }"
-      >
-        <span text-8em color-transparent absolute left--3rem top--2rem font-bold text-stroke-2 text-stroke-hex-aaa op10>{{ getGroupName(route) }}</span>
-      </div>
-      <div
-        class="slide-enter"
-        :style="{
-          '--enter-stage': idx,
-          '--enter-step': '60ms',
-        }"
-      >
-        <component
-          :is="route.path.includes('://') ? 'a' : 'RouterLink'"
-          v-bind="
-            route.path.includes('://') ? {
-              href: route.path,
-              target: '_blank',
-              rel: 'noopener noreferrer',
-            } : {
-              to: route.path,
-            }
-          "
-          class="item block font-normal mb-6 mt-2 no-underline"
-        >
-          <li class="no-underline" flex="~ col md:row gap-2 md:items-center">
-            <div class="title text-lg leading-1.2em" flex="~ gap-2 wrap">
-              <span align-middle>{{ route.title }}</span>
-              <span
-                v-if="route.redirect"
-                align-middle op50 flex-none text-xs ml--1.5
-                i-carbon-arrow-up-right
-                title="External"
-              />
-            </div>
-
-            <div flex="~ gap-2 items-center">
-              <span
-                v-if="route.inperson"
-                align-middle op50 flex-none
-                i-ri:group-2-line
-                title="In person"
-              />
-              <span
-                v-if="route.recording || route.video"
-                align-middle op50 flex-none
-                i-ri:film-line
-                title="Provided in video"
-              />
-              <span
-                v-if="route.radio"
-                align-middle op50 flex-none
-                i-ri:radio-line
-                title="Provided in radio"
-              />
-
-              <span text-sm op50 ws-nowrap>
-                {{ formatDate(route.date, true) }}
-              </span>
-              <span v-if="route.duration" text-sm op40 ws-nowrap>· {{ route.duration }}</span>
-              <span v-if="route.platform" text-sm op40 ws-nowrap>· {{ route.platform }}</span>
-              <span v-if="route.place" text-sm op40 ws-nowrap md:hidden>· {{ route.place }}</span>
-
-            </div>
-          </li>
-          <div v-if="route.place" op50 text-sm hidden mt--2 md:block>
-            {{ route.place }}
-          </div>
-        </component>
-      </div>
-    </template>
+  <ul v-else-if="compact" class="post-list compact">
+    <li v-for="post in posts" :key="post.path">
+      <RouterLink :to="post.path" class="post-link">
+        <span class="post-title">{{ post.title }}</span>
+        <span class="post-meta">
+          <time :datetime="post.date">{{ formatDate(post.date) }}</time>
+          <template v-if="post.readingTime"> · {{ post.readingTime }}</template>
+        </span>
+      </RouterLink>
+    </li>
   </ul>
+
+  <template v-else>
+    <section
+      v-for="(group, gidx) in groups"
+      :key="group.year"
+      class="post-group slide-enter"
+      :style="{ '--enter-stage': gidx, '--enter-step': '60ms' }"
+      :aria-labelledby="`year-${group.year}`"
+    >
+      <h2 :id="`year-${group.year}`" class="year-heading">
+        <span class="year-text">{{ group.year }}</span>
+      </h2>
+      <ul class="post-list">
+        <li
+          v-for="(post, idx) in group.posts"
+          :key="post.path"
+          class="slide-enter"
+          :style="{ '--enter-stage': gidx + idx + 1, '--enter-step': '60ms' }"
+        >
+          <RouterLink :to="post.path" class="post-link">
+            <span class="post-title">{{ post.title }}</span>
+            <span class="post-meta">
+              <time :datetime="post.date">{{ formatDate(post.date, false) }}</time>
+              <template v-if="post.readingTime"> · {{ post.readingTime }}</template>
+            </span>
+            <span v-if="post.description" class="post-desc">{{ post.description }}</span>
+          </RouterLink>
+        </li>
+      </ul>
+    </section>
+  </template>
 </template>
+
+<style scoped>
+.post-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-list > li {
+  margin: 0;
+  padding: 0;
+}
+
+.post-list > li::before {
+  display: none;
+}
+
+.post-link {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  margin: 0 -0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border-bottom: none !important;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.post-link:hover {
+  background-color: rgb(136 136 136 / 0.08);
+}
+
+.post-link:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.post-title {
+  font-size: 1.075rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--c-fg);
+}
+
+.post-meta {
+  align-self: start;
+  padding-top: 0.15rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  color: var(--c-fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.post-desc {
+  grid-column: 1 / -1;
+  font-size: 0.925rem;
+  line-height: 1.6;
+  color: var(--c-fg-muted);
+}
+
+@media (max-width: 639px) {
+  .post-link {
+    grid-template-columns: 1fr;
+  }
+}
+
+.year-heading {
+  position: relative;
+  height: 4.5rem;
+  margin: 2.5rem 0 0 !important;
+  font-size: 1rem !important;
+  pointer-events: none;
+  user-select: none;
+}
+
+.year-text {
+  position: absolute;
+  top: -1.25rem;
+  left: -2.5rem;
+  font-size: 7rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 2px #888;
+  opacity: 0.16;
+}
+
+.post-group:first-child .year-heading {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 767px) {
+  .year-text {
+    left: -0.5rem;
+    font-size: 5.5rem;
+  }
+}
+</style>

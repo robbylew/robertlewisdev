@@ -1,0 +1,25 @@
+# Cloudflare Pages headers — https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Cross-Origin-Opener-Policy: same-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Content-Security-Policy: base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests
+
+# Fingerprinted build assets never change.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Social preview images can be refreshed by a rebuild.
+/og/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# Not fingerprinted: give replaced images a new file name to bust caches.
+/images/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=31536000
+
+# Keep the *.pages.dev mirror out of search results (canonical is robertlewis.dev).
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex

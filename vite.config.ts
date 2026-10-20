@@ -1,237 +1,218 @@
-import { resolve } from 'node:path'
-import { VitePluginRadar } from 'vite-plugin-radar'
-import { defineConfig } from 'vite'
-import fs from 'fs-extra'
-import Inspect from 'vite-plugin-inspect'
-import Icons from 'unplugin-icons/vite'
-import IconsResolver from 'unplugin-icons/resolver'
-import Components from 'unplugin-vue-components/vite'
-import Markdown from 'unplugin-vue-markdown/vite'
+import type MarkdownIt from 'markdown-it'
+import type { CodeToHastOptions } from 'shiki'
+import type { Plugin } from 'vite'
+import type { RouteRecordRaw } from 'vue-router'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import MarkdownExitShiki from '@shikijs/markdown-exit'
+import { transformerMetaHighlight, transformerNotationDiff, transformerNotationHighlight } from '@shikijs/transformers'
 import Vue from '@vitejs/plugin-vue'
-import matter from 'gray-matter'
-import AutoImport from 'unplugin-auto-import/vite'
 import anchor from 'markdown-it-anchor'
-import LinkAttributes from 'markdown-it-link-attributes'
 import GitHubAlerts from 'markdown-it-github-alerts'
-import UnoCSS from 'unocss/vite'
-import SVG from 'vite-svg-loader'
-import MarkdownItShiki from '@shikijs/markdown-it'
-import { rendererRich, transformerTwoslash } from '@shikijs/twoslash'
-import MarkdownItMagicLink from 'markdown-it-magic-link'
-import VueRouter from 'unplugin-vue-router/vite'
-import { VueRouterAutoImports } from 'unplugin-vue-router'
-
+import LinkAttributes from 'markdown-it-link-attributes'
 // @ts-expect-error missing types
 import TOC from 'markdown-it-table-of-contents'
-import { slugify } from './scripts/slugify'
+import UnoCSS from 'unocss/vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import Markdown from 'unplugin-vue-markdown/vite'
+import { defineConfig } from 'vite'
+import { VueRouterAutoImports } from 'vue-router/unplugin'
+import VueRouter from 'vue-router/vite'
+import { readPageFile } from './scripts/content.ts'
+import { transformerCodeBlock } from './scripts/markdown/code-block.ts'
+import { MarkdownImageAttrs } from './scripts/markdown/image-attrs.ts'
+import { shikiContrastReplacements } from './scripts/markdown/shiki-contrast.ts'
+import { generateSeoAssets } from './scripts/seo/index.ts'
+import { slugify } from './scripts/slugify.ts'
 
-const promises: Promise<any>[] = []
+const root = fileURLToPath(new URL('.', import.meta.url))
+
+/** Static paths of routes that actually render a page (skips pass-through parents like `/posts`). */
+function renderablePaths(routes: Readonly<RouteRecordRaw[]>, parent = ''): string[] {
+  return routes.flatMap((route) => {
+    const joined = route.path.startsWith('/') ? route.path : `${parent.replace(/\/$/, '')}/${route.path}`
+    const full = joined.replace(/\/+$/, '') || '/'
+    const hasView = Boolean(route.component || route.components)
+    const self = hasView && !full.includes(':') ? [full] : []
+    return [...self, ...renderablePaths(route.children ?? [], full)]
+  })
+}
+
+const stylesheetCache = new Map<string, string>()
+
+/**
+ * Inlines the site's single stylesheet into each page. Most visitors land once,
+ * so removing the render-blocking request beats separate caching (repeat visits
+ * still revalidate HTML cheaply via ETag).
+ */
+function inlineStylesheets(html: string, outDir: string): string {
+  return html.replace(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/g, (_tag, href: string) => {
+    const file = path.join(outDir, href)
+    if (!stylesheetCache.has(file))
+      stylesheetCache.set(file, fs.readFileSync(file, 'utf-8'))
+    return `<style>${stylesheetCache.get(file)}</style>`
+  })
+}
+
+/** Preloads the primary text font so the first paint uses Inter instead of a fallback. */
+function PreloadFonts(pattern: RegExp): Plugin {
+  return {
+    name: 'robertlewis:preload-fonts',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, ctx) {
+        return Object.keys(ctx.bundle ?? {})
+          .filter(file => pattern.test(file))
+          .map(file => ({
+            tag: 'link',
+            attrs: { rel: 'preload', href: `/${file}`, as: 'font', type: 'font/woff2', crossorigin: '' },
+            injectTo: 'head' as const,
+          }))
+      },
+    },
+  }
+}
 
 export default defineConfig({
   resolve: {
-    alias: [{ find: '~/', replacement: `${resolve(__dirname, 'src')}/` }],
+    alias: [{ find: '~/', replacement: `${path.resolve(root, 'src')}/` }],
   },
+
   server: {
-    host: true, // or '0.0.0.0'
     port: 3333,
   },
-  optimizeDeps: {
-    include: [
-      'vue',
-      'vue-router',
-      '@vueuse/core',
-      'dayjs',
-      'dayjs/plugin/localizedFormat',
-    ],
+
+  define: {
+    // `DEBUG_HYDRATION=true pnpm build` to log hydration mismatch details in production builds.
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: process.env.DEBUG_HYDRATION === 'true',
   },
+
   plugins: [
-    UnoCSS(),
-
     VueRouter({
-      extensions: ['.vue', '.md'],
       routesFolder: 'pages',
-      logs: true,
+      extensions: ['.vue', '.md'],
+      dts: 'typed-router.d.ts',
       extendRoute(route) {
-        const path = route.components.get('default')
-        if (!path)
-          return
-
-        if (!path.includes('projects.md') && path.endsWith('.md')) {
-          const { data } = matter(fs.readFileSync(path, 'utf-8'))
-          route.addToMeta({
-            frontmatter: data,
-          })
-        }
+        const file = route.components.get('default')
+        if (file?.endsWith('.md'))
+          route.addToMeta({ frontmatter: readPageFile(file).frontmatter })
       },
     }),
 
     Vue({
       include: [/\.vue$/, /\.md$/],
-      script: {
-        defineModel: true,
-      },
     }),
 
     Markdown({
-      wrapperComponent: id => id.includes('/demo/')
-      ? 'WrapperDemo'
-      : 'WrapperPost',
-      wrapperClasses: (id, code) =>
-        code.includes('@layout-full-width')
-          ? ''
-          : 'prose m-auto slide-enter-content',
-      headEnabled: true,
-      exportFrontmatter: false,
+      headEnabled: false,
       exposeFrontmatter: false,
-      exposeExcerpt: false,
-      markdownItOptions: {
+      exportFrontmatter: false,
+      wrapperComponent: 'WrapperPost',
+      wrapperClasses: (_id, code) => code.includes('@layout-full-width')
+        ? ''
+        : 'prose m-auto slide-enter-content',
+      // Same normalization as the route meta (dates, reading time, tags).
+      frontmatterPreprocess: (_frontmatter, _options, id) => ({
+        head: {},
+        frontmatter: readPageFile(id.split('?')[0]).frontmatter,
+      }),
+      markdownOptions: {
+        html: true,
+        linkify: true,
+        typographer: true,
         quotes: '""\'\'',
       },
-      async markdownItSetup(md) {
-        md.use(
-          await MarkdownItShiki({
-            themes: {
-              dark: 'vitesse-dark',
-              light: 'vitesse-light',
-            },
-            defaultColor: false,
-            cssVariablePrefix: '--s-',
-            transformers: [
-              transformerTwoslash({
-                explicitTrigger: true,
-                renderer: rendererRich(),
-              }),
-            ],
-          }),
-        )
+      async markdownSetup(md) {
+        // `colorReplacements` is forwarded to Shiki at runtime but missing from the integration's option type.
+        const shikiOptions: Parameters<typeof MarkdownExitShiki>[0] & Pick<CodeToHastOptions, 'colorReplacements'> = {
+          themes: {
+            light: 'vitesse-light',
+            dark: 'vitesse-dark',
+          },
+          defaultColor: false,
+          cssVariablePrefix: '--s-',
+          colorReplacements: shikiContrastReplacements,
+          transformers: [
+            transformerNotationDiff(),
+            transformerNotationHighlight(),
+            transformerMetaHighlight(),
+            transformerCodeBlock(),
+          ],
+        }
+        md.use(MarkdownExitShiki(shikiOptions))
 
-        md.use(anchor, {
+        // markdown-it plugins run unchanged on markdown-exit, but are typed against markdown-it.
+        const mdIt = md as unknown as MarkdownIt
+
+        mdIt.use(anchor, {
           slugify,
           permalink: anchor.permalink.linkInsideHeader({
             symbol: '#',
-            renderAttrs: () => ({ 'aria-hidden': 'true' }),
+            // Decorative for mouse users; kept out of the tab order and accessibility tree.
+            renderAttrs: () => ({ 'aria-hidden': 'true', 'tabindex': '-1' }),
           }),
         })
 
-        md.use(LinkAttributes, {
+        mdIt.use(LinkAttributes, {
           matcher: (link: string) => /^https?:\/\//.test(link),
           attrs: {
             target: '_blank',
-            rel: 'noopener',
+            rel: 'noopener noreferrer',
           },
         })
 
-        md.use(TOC, {
-          includeLevel: [1, 2, 3, 4],
+        mdIt.use(TOC, {
+          includeLevel: [2, 3],
           slugify,
-          containerHeaderHtml:
-            '<div class="table-of-contents-anchor"><div class="i-ri-menu-2-fill" /></div>',
+          containerHeaderHtml: '<div class="table-of-contents-anchor"><div class="i-ri-menu-2-fill"></div></div>',
         })
 
-        md.use(MarkdownItMagicLink, {
-          linksMap: {
-            'Honeywell': 'https://honeywell.com',
-            'UCLA': 'https://ucla.edu',
-            'Georgia Tech': 'https://gatech.edu',
-            'Pandas': 'https://pandas.pydata.org/',
-            'Python': 'https://www.python.org/',
-            'JavaScript': 'https://www.javascript.com/',
-            'HTML': 'https://upload.wikimedia.org/wikipedia/commons/6/61/HTML5_logo_and_wordmark.svg',
-            'CSS': '/path/to/csslogo',
-            'TailwindCSS': 'https://tailwindcss.com',
-            'React.js': 'https://reactjs.org',
-            'Next.js': 'https://nextjs.org',
-            'Node.js': 'https://nodejs.org',
-            'Express.js': 'https://expressjs.com',
-            'SQL': 'https://www.sql.org',
-            'PostgreSQL': 'https://www.postgresql.org',
-            'C++': 'https://isocpp.org/',
-            'MySQL': 'https://www.mysql.com/',
-            'AWS': 'https://aws.amazon.com',
-            'Docker': 'https://www.docker.com',
-            'Apache Spark': 'https://spark.apache.org/',
-            'Apache Hadoop': 'https://hadoop.apache.org/',
-            'Apache Kafka': 'https://kafka.apache.org/',
-            'TensorFlow': 'https://www.tensorflow.org/',
-            'PyTorch': 'https://pytorch.org/',
-            'Java': 'https://www.java.com/en/',
-            'MongoDB': 'https://www.mongodb.com/',
-            'Django': 'https://www.djangoproject.com/',
-            'Tableau': 'https://www.tableau.com/',
-            'R': 'https://www.r-project.org/about.html',
-            'Kubernetes': 'https://kubernetes.io/',
-            'Power BI':
-              'https://www.microsoft.com/en-us/power-platform/products/power-bi',
-            'Matplotlib': 'https://matplotlib.org/',
-            'Scikit-Learn': 'https://scikit-learn.org/stable/',
-            'Numpy': 'https://numpy.org/',
-            'Georgia Tech': 'https://www.gatech.edu/',
-          },
-          imageOverrides: [
-            ['https://github.com/vuejs/core', 'https://vuejs.org/logo.svg'],
-            [
-              'https://github.com/nuxt/nuxt',
-              'https://nuxt.com/assets/design-kit/icon-green.svg',
-            ],
-            ['https://github.com/vitejs/vite', 'https://vitejs.dev/logo.svg'],
-            ['https://nuxtlabs.com', 'https://github.com/nuxtlabs.png'],
-            [/opencollective\.com\/vite/, 'https://github.com/vitejs.png'],
-            [/opencollective\.com\/elk/, 'https://github.com/elk-zone.png'],
-            ['https://honeywell.com', 'https://www.sine.co/wp-content/uploads/2019/08/Honeywell-icon.png'],
-            ['https://ucla.edu', 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/The_University_of_California_UCLA.svg/300px-The_University_of_California_UCLA.svg.png'],
-            ['https://www.gatech.edu/', 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Georgia_Tech_seal.svg/300px-Georgia_Tech_seal.svg.png']
-          ],
-        })
+        mdIt.use(GitHubAlerts)
 
-        md.use(GitHubAlerts)
+        md.use(MarkdownImageAttrs, { publicDir: path.join(root, 'public') })
       },
     }),
 
     AutoImport({
-      imports: ['vue', VueRouterAutoImports, '@vueuse/core'],
+      imports: [
+        'vue',
+        VueRouterAutoImports,
+        '@vueuse/core',
+        { '@unhead/vue': ['useHead', 'useSeoMeta'] },
+      ],
+      dirs: ['src/composables'],
+      dts: 'auto-imports.d.ts',
+      vueTemplate: true,
     }),
 
     Components({
       extensions: ['vue', 'md'],
-      dts: true,
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
-      resolvers: [
-        IconsResolver({
-          componentPrefix: '',
-        }),
-      ],
+      dts: 'components.d.ts',
     }),
 
-    Inspect(),
+    UnoCSS(),
 
-    Icons({
-      defaultClass: 'inline',
-      defaultStyle: 'vertical-align: sub;',
-    }),
-
-    SVG({
-      svgo: false,
-      defaultImport: 'url',
-    }),
-
-    {
-      name: 'await',
-      async closeBundle() {
-        await Promise.all(promises)
-      },
-    },
+    PreloadFonts(/inter-latin-wght-normal-[\w-]+\.woff2$/),
   ],
 
   build: {
-    rollupOptions: {
-      onwarn(warning, next) {
-        if (warning.code !== 'UNUSED_EXTERNAL_IMPORT')
-          next(warning)
-      },
-    },
+    // One stylesheet for the whole site (inlined into every page below).
+    cssCodeSplit: false,
   },
 
   ssgOptions: {
-    formatting: 'minify',
+    // Vue's SSR output is already compact; minifying it would collapse whitespace and break hydration.
+    formatting: 'none',
+    dirStyle: 'flat',
+    // Render every static page plus a real `404.html` (served by Cloudflare Pages with a 404 status).
+    includedRoutes: (_paths, routes) => [...new Set([...renderablePaths(routes), '/404'])],
+    onPageRendered: (_route, html) => inlineStylesheets(html, path.join(root, 'dist')),
+    async onFinished() {
+      await generateSeoAssets({ root, outDir: path.join(root, 'dist') })
+    },
   },
 })

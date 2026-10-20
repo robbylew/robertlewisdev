@@ -2,23 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="author" content="Robert Lewis" />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="revisit-after" content="7 days" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-      <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-      <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-      <link rel="manifest" href="/site.webmanifest" />
-    <meta name="msapplication-TileColor" content="#ffffff" />
-    <title>Robert Lewis</title>
-      <script>
-          ;(function () {
-              document.documentElement.classList.toggle('dark', true)
-          })()
-      </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="alternate" type="application/rss+xml" title="Robert Lewis" href="/feed.xml" />
+    <link rel="alternate" type="application/atom+xml" title="Robert Lewis" href="/atom.xml" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <link rel="me" href="https://github.com/robbylew" />
+    <link rel="me" href="https://www.linkedin.com/in/robbylew/" />
+    <link rel="me" href="https://x.com/roberthedev" />
+    <script>
+      // Apply the saved color scheme before first paint (dark by default).
+      ;(function () {
+        try {
+          var scheme = localStorage.getItem('vueuse-color-scheme') || 'dark'
+          var dark = scheme === 'dark' || (scheme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.classList.toggle('dark', dark)
+        } catch (e) {
+          document.documentElement.classList.add('dark')
+        }
+      })()
+    </script>
   </head>
-  <body class="font-sans text-gray-700 dark:text-gray-200 relative">
+  <body class="font-sans">
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
