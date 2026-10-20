@@ -12,8 +12,13 @@ export const site = {
   name: 'Robert Lewis',
   url: 'https://robertlewis.dev',
   domain: 'robertlewis.dev',
-  jobTitle: 'Machine Learning Engineer',
-  description: 'Robert Lewis is a machine learning engineer focused on model deployment and MLOps. M.S. CS student at Georgia Tech, B.S. Statistics & Data Science from UCLA.',
+  jobTitle: 'Data Engineer',
+  /** Current employer (shown in titles, social cards and structured data). */
+  employer: {
+    name: 'Honeywell',
+    url: 'https://www.honeywell.com',
+  },
+  description: 'Robert Lewis is a data engineer at Honeywell building data and machine learning pipelines. M.S. in Computer Science (AI) from Georgia Tech, B.S. in Statistics & Data Science from UCLA.',
   email: 'contact@robertlewis.dev',
   lang: 'en',
   locale: 'en_US',
@@ -30,13 +35,13 @@ export const site = {
     { name: 'X', handle: '@roberthedev', url: 'https://x.com/roberthedev', icon: 'i-ri-twitter-x-line' },
   ] satisfies SocialLink[],
   education: [
-    { name: 'Georgia Institute of Technology', url: 'https://www.gatech.edu', current: true },
+    { name: 'Georgia Institute of Technology', url: 'https://www.gatech.edu', current: false },
     { name: 'University of California, Los Angeles', url: 'https://www.ucla.edu', current: false },
   ],
   knowsAbout: [
+    'Data Engineering',
     'Machine Learning',
     'MLOps',
-    'Data Engineering',
     'Deep Learning',
     'Computer Vision',
     'Large Language Models',
@@ -57,6 +62,9 @@ export const site = {
     'MongoDB',
   ],
 } as const
+
+/** e.g. "Data Engineer at Honeywell". */
+export const headline = `${site.jobTitle} at ${site.employer.name}`
 
 export const OG_IMAGE_SIZE = { width: 1200, height: 630 } as const
 

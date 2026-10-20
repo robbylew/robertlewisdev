@@ -393,6 +393,14 @@ html:not(.dark) [img-dark] {
     max-width: none !important;
   }
 
+  #main {
+    padding: 0 !important;
+  }
+
+  .skip-link {
+    display: none;
+  }
+
   .slide-enter,
   .slide-enter-content > * {
     animation: none !important;

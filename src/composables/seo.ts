@@ -1,10 +1,15 @@
 import type { PageFrontmatter } from '~/types'
-import { absoluteUrl, normalizePath, OG_IMAGE_SIZE, ogImageUrl, site } from '~/site'
+import { absoluteUrl, headline, normalizePath, OG_IMAGE_SIZE, ogImageUrl, site } from '~/site'
 
 const PERSON_ID = `${site.url}/#person`
 const WEBSITE_ID = `${site.url}/#website`
 
 function person() {
+  const school = (current: boolean) => site.education
+    .filter(entry => entry.current === current)
+    .map(entry => ({ '@type': 'CollegeOrUniversity', 'name': entry.name, 'url': entry.url }))
+  const alumniOf = school(false)
+  const affiliation = school(true)
   return {
     '@type': 'Person',
     '@id': PERSON_ID,
@@ -12,15 +17,12 @@ function person() {
     'url': `${site.url}/`,
     'email': `mailto:${site.email}`,
     'jobTitle': site.jobTitle,
+    'worksFor': { '@type': 'Organization', 'name': site.employer.name, 'url': site.employer.url },
     'description': site.description,
     'sameAs': site.socials.map(social => social.url),
     'knowsAbout': [...site.knowsAbout],
-    'alumniOf': site.education
-      .filter(school => !school.current)
-      .map(school => ({ '@type': 'CollegeOrUniversity', 'name': school.name, 'url': school.url })),
-    'affiliation': site.education
-      .filter(school => school.current)
-      .map(school => ({ '@type': 'CollegeOrUniversity', 'name': school.name, 'url': school.url })),
+    ...(alumniOf.length ? { alumniOf } : {}),
+    ...(affiliation.length ? { affiliation } : {}),
   }
 }
 
@@ -45,7 +47,7 @@ export function useSeo(frontmatter: PageFrontmatter, routePath: string): void {
   const noindex = Boolean(frontmatter.noindex || frontmatter.draft)
 
   const pageTitle = String(frontmatter.title ?? site.name)
-  const title = frontmatter.seoTitle ?? (isHome ? `${site.name} · ${site.jobTitle}` : `${pageTitle} · ${site.name}`)
+  const title = frontmatter.seoTitle ?? (isHome ? `${site.name} · ${headline}` : `${pageTitle} · ${site.name}`)
   const socialTitle = isHome || frontmatter.seoTitle ? title : pageTitle
   const description = String(frontmatter.description ?? site.description)
   const url = absoluteUrl(path)
@@ -53,7 +55,7 @@ export function useSeo(frontmatter: PageFrontmatter, routePath: string): void {
   // Preview images are only generated for indexable pages.
   const image = customImage ?? ogImageUrl(noindex ? '/' : path)
   const imageAlt = String(frontmatter.imageAlt ?? (isHome
-    ? `${site.name} — ${site.jobTitle}`
+    ? `${site.name} — ${headline}`
     : `${pageTitle} — ${site.name}`))
 
   useSeoMeta({

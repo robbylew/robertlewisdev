@@ -1,10 +1,12 @@
 import type { ContentPage } from '../content.ts'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import process from 'node:process'
 import { Feed } from 'feed'
 import { createMarkdownExit } from 'markdown-exit'
-import { absoluteUrl, ogImageName, ogImageUrl, site } from '../../src/site.ts'
+import { absoluteUrl, headline, ogImageName, ogImageUrl, site } from '../../src/site.ts'
 import { isIndexable, isPost, loadPages } from '../content.ts'
+import { INDEXNOW_KEY, submitToIndexNow } from './indexnow.ts'
 import { renderOgImage } from './og-image.ts'
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
@@ -43,7 +45,7 @@ async function writeOgImages(pages: ContentPage[], outDir: string): Promise<numb
       url: `${site.domain}${page.path === '/' ? '' : page.path}`,
       meta: isPost(page) && frontmatter.date
         ? [formatDate(frontmatter.date), frontmatter.readingTime].filter(Boolean).join(' · ')
-        : site.jobTitle,
+        : headline,
     })
     await fs.writeFile(path.join(dir, ogImageName(page.path)), png)
   }))
@@ -139,6 +141,19 @@ export async function generateSeoAssets({ root, outDir }: { root: string, outDir
     writeSitemap(pages, outDir),
     writeFeeds(pages, outDir),
   ])
+  await fs.writeFile(path.join(outDir, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY)
   const ms = Math.round(performance.now() - started)
   console.log(`[seo] ${images} social images, sitemap with ${urls} URLs, feeds with ${posts} posts (${ms}ms)`)
+
+  // Cloudflare Pages production builds announce the (re)deployed pages to search engines.
+  if (process.env.CF_PAGES === '1' && process.env.CF_PAGES_BRANCH === 'main') {
+    const list = pages.filter(isIndexable).map(page => absoluteUrl(page.path))
+    try {
+      const status = await submitToIndexNow(list)
+      console.log(`[seo] IndexNow: submitted ${list.length} URLs (HTTP ${status})`)
+    }
+    catch (error) {
+      console.warn(`[seo] IndexNow submission skipped: ${String(error)}`)
+    }
+  }
 }

@@ -21,6 +21,8 @@ pnpm preview    # serve dist/ locally
 | `pnpm typecheck` | `vue-tsc` type checking |
 | `pnpm img <files…>` | Convert images to WebP (`--max-width`, `--quality`, `--replace`) |
 | `pnpm icons` | Regenerate favicons/app icons from the logo in `src/logo.ts` |
+| `pnpm resume:pdf` | Regenerate `public/Robert_Lewis_Resume.pdf` from the built `/resume` page (run after `pnpm build`) |
+| `pnpm indexnow` | Notify IndexNow search engines (Bing, Yandex, …) about all pages — production deploys do this automatically |
 
 To preview exactly like production (headers, redirects, 404s), run `npx wrangler pages dev dist` after building.
 
@@ -43,8 +45,8 @@ draft: true # optional: hidden from lists and marked noindex
 Other optional fields: `display` (visible H1 if different from `title`), `subtitle`, `seoTitle` (full `<title>` override), `image`/`imageAlt` (custom social image), `ogTitle`/`ogLabel` (generated card text), `noindex`, `art` (`plum`, `dots`, `random`, `none`), `tocAlwaysOn`. Put `[[toc]]` in a post for a table of contents and `<!-- @layout-full-width -->` to opt out of the reading-width layout.
 
 - **Projects** live in `src/data/projects.ts` (`featured: true` shows them on the home page).
-- **Resume** lives in `src/data/resume.ts` and mirrors `public/Robert_Lewis_Resume.pdf` — update both together.
-- **Site-wide details** (name, socials, description, email) live in `src/site.ts`.
+- **Resume** lives in `src/data/resume.ts`. The downloadable PDF is printed from the resume page, so after editing run `pnpm build && pnpm resume:pdf` and commit the new `public/Robert_Lewis_Resume.pdf`.
+- **Site-wide details** (name, job title, employer, socials, description, email) live in `src/site.ts`.
 
 ### Images
 
@@ -58,6 +60,7 @@ Generated automatically for every page from its frontmatter:
 - Open Graph and Twitter/X cards with a 1200×630 preview image (`dist/og/*.png`, rendered at build time with Satori), which is what iMessage, Slack, LinkedIn and others show
 - JSON-LD structured data: `Person` and `WebSite` everywhere, `ProfilePage` on the home page, `BlogPosting` and `BreadcrumbList` on posts
 - `sitemap.xml`, `feed.xml` (RSS) and `atom.xml`; a real `404.html` so unknown URLs return HTTP 404
+- [IndexNow](https://www.indexnow.org) pings on every production deploy, so Bing (and DuckDuckGo, Yahoo and ChatGPT search, which use it) pick up changes within minutes
 
 Validate with the [Rich Results Test](https://search.google.com/test/rich-results) and refresh link previews with the [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/).
 
@@ -69,13 +72,9 @@ Hosted on Cloudflare Pages (project `robertlewisdev-v2`), deployed on every push
 - Response headers (security, caching) and redirects live in `public/_headers` and `public/_redirects`
 - pnpm's supply-chain policies (release-age cooldown, trust checks) are configured in `pnpm-workspace.yaml`
 
-Recommended one-time setup in the Cloudflare dashboard:
+`www.robertlewis.dev` permanently redirects to `robertlewis.dev` via a tiny Cloudflare Worker that only runs on the `www` route (source in `workers/www-redirect/`). Redeploy it after changes with `npx wrangler deploy --config workers/www-redirect/wrangler.jsonc`.
 
-1. **Rules → Redirect Rules →** template *Redirect from WWW to root* (`www.robertlewis.dev` currently serves a duplicate copy; canonical tags mitigate it, a 301 fixes it).
-2. **Caching → Configuration → Crawler Hints: On** (notifies Bing and others of changes via IndexNow).
-3. **Speed → Optimization:** keep Rocket Loader off (it breaks module scripts).
-
-Then verify the domain in [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters) and submit `https://robertlewis.dev/sitemap.xml`.
+Search engines: verify the domain in [Google Search Console](https://search.google.com/search-console) (choose **Domain** property; Cloudflare can add the DNS record automatically), submit `https://robertlewis.dev/sitemap.xml`, then import the site into [Bing Webmaster Tools](https://www.bing.com/webmasters) from Search Console.
 
 ## License
 

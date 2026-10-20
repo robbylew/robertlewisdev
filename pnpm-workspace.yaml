@@ -12,6 +12,10 @@ trustPolicyExclude:
   - undici-types@6.21.0
 
 shellEmulator: true
+# Security patches for transitive build-time dependencies (patch releases only).
+overrides:
+  fflate@<0.7.5: 0.7.5
+  tinypool@<2.1.2: 2.1.2
 # Dependencies allowed to run install scripts.
 allowBuilds:
   esbuild: true

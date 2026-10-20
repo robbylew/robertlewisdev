@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { resume, resumePdf } from '~/data/resume'
+import { formatMonth, resume, resumePdf } from '~/data/resume'
 import { site } from '~/site'
 
 const github = site.socials.find(social => social.name === 'GitHub')!
@@ -12,6 +12,15 @@ function print() {
 
 <template>
   <div class="resume">
+    <div class="print-header">
+      <p class="print-name">
+        {{ site.name }}
+      </p>
+      <p class="print-headline">
+        {{ resume.headline }}
+      </p>
+    </div>
+
     <div class="resume-actions print:hidden">
       <a :href="resumePdf" download="Robert_Lewis_Resume.pdf" class="btn-primary">
         <span class="i-ri-download-2-line" aria-hidden="true" /> Download PDF
@@ -50,6 +59,35 @@ function print() {
       <p>{{ resume.summary }}</p>
     </section>
 
+    <section aria-labelledby="resume-experience">
+      <h2 id="resume-experience">
+        Experience
+      </h2>
+      <div v-for="job in resume.experience" :key="job.company" class="resume-entry">
+        <div class="entry-row">
+          <h3>
+            <a :href="job.url" target="_blank" rel="noopener noreferrer">{{ job.company }}</a>
+          </h3>
+          <span class="entry-aside">{{ job.location }}</span>
+        </div>
+        <ul class="roles">
+          <li v-for="role in job.roles" :key="role.title" class="role">
+            <div class="entry-row">
+              <span class="role-title">{{ role.title }} <span class="role-type">· {{ role.type }}</span></span>
+              <span class="entry-aside">
+                <time :datetime="role.start">{{ formatMonth(role.start) }}</time> – <time v-if="role.end" :datetime="role.end">{{ formatMonth(role.end) }}</time><template v-else>Present</template>
+              </span>
+            </div>
+            <ul v-if="role.highlights?.length" class="highlights">
+              <li v-for="highlight in role.highlights" :key="highlight">
+                {{ highlight }}
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </section>
+
     <section aria-labelledby="resume-education">
       <h2 id="resume-education">
         Education
@@ -59,10 +97,12 @@ function print() {
           <h3>
             <a :href="edu.url" target="_blank" rel="noopener noreferrer">{{ edu.school }}</a>
           </h3>
-          <span class="entry-aside">{{ edu.dates }}</span>
+          <span class="entry-aside">
+            <time :datetime="edu.start">{{ formatMonth(edu.start) }}</time> – <time v-if="edu.end" :datetime="edu.end">{{ formatMonth(edu.end) }}</time><template v-else>Present</template>
+          </span>
         </div>
         <div class="entry-row entry-sub">
-          <span>{{ edu.degree }}</span>
+          <span>{{ edu.degree }}<template v-if="edu.specialization"> — {{ edu.specialization }}</template></span>
           <span class="entry-aside">{{ edu.location }}</span>
         </div>
         <p class="entry-detail">
@@ -119,7 +159,7 @@ function print() {
       <h2 id="resume-certifications">
         Certifications
       </h2>
-      <ul class="highlights">
+      <ul class="highlights certifications">
         <li v-for="cert in resume.certifications" :key="cert">
           {{ cert }}
         </li>
@@ -240,5 +280,210 @@ function print() {
 
 .highlights > li {
   margin: 0.25rem 0;
+}
+
+.roles {
+  margin: 0.35rem 0 0 !important;
+  padding: 0 !important;
+  list-style: none;
+}
+
+.roles > li {
+  margin: 0;
+  padding: 0;
+}
+
+.roles > li::before {
+  display: none;
+}
+
+.role + .role {
+  margin-top: 0.25rem;
+}
+
+.role-title {
+  font-weight: 600;
+  color: var(--c-fg);
+}
+
+.role-type {
+  font-weight: 400;
+  color: var(--c-fg-muted);
+}
+
+.print-header {
+  display: none;
+}
+
+/* One-page printable resume (also used to generate the PDF via `pnpm resume:pdf`). */
+@media print {
+  .resume {
+    font-size: 9.6pt;
+    line-height: 1.33;
+    color: #1a1a1a;
+  }
+
+  .resume a {
+    color: inherit;
+    border-bottom: 0 !important;
+  }
+
+  .print-header {
+    display: block;
+  }
+
+  .resume-actions {
+    display: none;
+  }
+
+  .print-name {
+    margin: 0 !important;
+    font-size: 2.15em;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #000;
+  }
+
+  .print-headline {
+    margin: 0.2em 0 0 !important;
+    font-size: 1.1em;
+    color: #333;
+  }
+
+  .contact-list {
+    gap: 0.1em 1.3em;
+    margin: 0.55em 0 0.2em !important;
+    font-size: 0.95em;
+  }
+
+  .resume h2 {
+    margin: 0.85em 0 0.35em !important;
+    padding-bottom: 0.15em;
+    border-bottom-color: #c8c8c8;
+    font-size: 1.05em;
+    color: #000;
+  }
+
+  .resume h3,
+  .role-title {
+    font-size: 1em;
+    color: #000;
+  }
+
+  .resume p {
+    margin: 0 !important;
+  }
+
+  .resume-entry + .resume-entry {
+    margin-top: 0.55em;
+  }
+
+  .entry-aside {
+    font-size: 0.95em;
+    color: #444;
+  }
+
+  .entry-detail {
+    margin-top: 0.15em !important;
+    font-size: 0.95em;
+  }
+
+  .roles {
+    margin-top: 0.15em !important;
+  }
+
+  .role + .role {
+    margin-top: 0.05em;
+  }
+
+  .skills {
+    gap: 0.12em;
+  }
+
+  /* Render skill and tech lists as plain comma-separated text. */
+  .skill-group {
+    display: flex;
+    gap: 0.4em;
+  }
+
+  .skills dt::after {
+    content: ':';
+  }
+
+  .skills dt {
+    flex-shrink: 0;
+    font-size: 1em;
+  }
+
+  .skills dd,
+  .chips {
+    display: inline;
+    margin: 0 !important;
+  }
+
+  .chips > li {
+    display: inline;
+    padding: 0;
+    border: 0;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+  }
+
+  .chips > li:not(:last-child)::after {
+    content: ', ';
+  }
+
+  .resume-entry > .chips {
+    display: block;
+    margin-top: 0.05em !important;
+    font-style: italic;
+    color: #444;
+  }
+
+  .highlights {
+    margin: 0.1em 0 0 !important;
+  }
+
+  .highlights > li {
+    margin: 0.05em 0;
+  }
+
+  /* Center the bullet on the first line at the tighter print line-height. */
+  .highlights > li::before {
+    top: calc(0.665em - 0.1875em);
+    background-color: #666;
+  }
+
+  .certifications {
+    padding: 0 !important;
+  }
+
+  .certifications > li {
+    display: inline;
+    margin: 0;
+    padding: 0;
+  }
+
+  .certifications > li::before {
+    display: none;
+  }
+
+  .certifications > li:not(:last-child)::after {
+    content: '  ·  ';
+    white-space: pre;
+    color: #888;
+  }
+
+  .resume-entry,
+  .skill-group,
+  .highlights > li {
+    break-inside: avoid;
+  }
+
+  h2 {
+    break-after: avoid;
+  }
 }
 </style>

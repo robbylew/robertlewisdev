@@ -39,6 +39,17 @@ onKeyStroke('Escape', (event) => {
     event.preventDefault()
   }
 })
+
+// Always print in the light theme.
+let printingFromDark = false
+useEventListener('beforeprint', () => {
+  printingFromDark = document.documentElement.classList.contains('dark')
+  document.documentElement.classList.remove('dark')
+})
+useEventListener('afterprint', () => {
+  if (printingFromDark)
+    document.documentElement.classList.add('dark')
+})
 </script>
 
 <template>

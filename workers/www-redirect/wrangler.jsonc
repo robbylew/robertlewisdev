@@ -1,0 +1,10 @@
+{
+  "name": "robertlewis-www-redirect",
+  "main": "index.ts",
+  "compatibility_date": "2026-10-01",
+  "routes": [
+    { "pattern": "www.robertlewis.dev/*", "zone_name": "robertlewis.dev" }
+  ],
+  "workers_dev": false,
+  "preview_urls": false
+}
