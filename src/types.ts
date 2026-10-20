@@ -22,9 +22,8 @@ export interface PageFrontmatter {
   imageAlt?: string
   /** Full `<title>` override (also used for social cards). Defaults to `{title} · Robert Lewis`. */
   seoTitle?: string
-  /** Overrides for the generated social preview image. */
+  /** Overrides the title on the generated social preview image. */
   ogTitle?: string
-  ogLabel?: string
   /** Background art. Defaults to `random`. */
   art?: 'plum' | 'dots' | 'random' | 'none'
   wrapperClass?: string

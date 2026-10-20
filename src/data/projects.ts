@@ -7,8 +7,6 @@ export interface Project {
   tags?: string[]
   /** Source isn't public; rendered with a "Private" badge instead of a link. */
   private?: boolean
-  /** Shown on the home page. */
-  featured?: boolean
 }
 
 export const projects: Record<string, Project[]> = {
@@ -19,7 +17,6 @@ export const projects: Record<string, Project[]> = {
       description: 'Shazam-style song recognition in Go — real-time audio fingerprinting with FFmpeg preprocessing, Spotify/YouTube metadata and MongoDB/SQLite fingerprint storage.',
       icon: 'i-simple-icons-go',
       tags: ['Go', 'MongoDB', 'SQLite', 'FFmpeg'],
-      featured: true,
     },
     {
       name: 'LLM-Driven Document Summarization',
@@ -27,7 +24,6 @@ export const projects: Record<string, Project[]> = {
       icon: 'i-simple-icons-amazonaws',
       tags: ['Python', 'LangChain', 'Pinecone', 'Docker', 'AWS'],
       private: true,
-      featured: true,
     },
     {
       name: 'End-to-End MLOps Pipeline',
@@ -35,7 +31,6 @@ export const projects: Record<string, Project[]> = {
       icon: 'i-simple-icons-kubernetes',
       tags: ['Kubeflow', 'Kubernetes', 'Terraform'],
       private: true,
-      featured: true,
     },
     {
       name: 'Twitter Sentiment Dashboard',
@@ -93,5 +88,3 @@ export const projects: Record<string, Project[]> = {
     },
   ],
 }
-
-export const featuredProjects: Project[] = Object.values(projects).flat().filter(project => project.featured)

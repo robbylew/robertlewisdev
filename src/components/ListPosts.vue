@@ -3,22 +3,13 @@ import type { Post } from '~/types'
 import { formatDate } from '~/logics'
 import { getPosts } from '~/logics/posts'
 
-const props = withDefaults(defineProps<{
-  type?: string
-  /** Maximum number of posts to show. */
-  limit?: number
-  /** Flat list without year headings (used on the home page). */
-  compact?: boolean
-}>(), {
+const props = withDefaults(defineProps<{ type?: string }>(), {
   type: 'blog',
 })
 
 const router = useRouter()
 
-const posts = computed(() => {
-  const all = getPosts(router, props.type)
-  return props.limit ? all.slice(0, props.limit) : all
-})
+const posts = computed(() => getPosts(router, props.type))
 
 const groups = computed(() => {
   const result: { year: string, posts: Post[] }[] = []
@@ -36,18 +27,6 @@ const groups = computed(() => {
   <p v-if="!posts.length" class="py-2 color-faint">
     { nothing here yet }
   </p>
-
-  <ul v-else-if="compact" class="post-list compact">
-    <li v-for="post in posts" :key="post.path">
-      <RouterLink :to="post.path" class="post-link">
-        <span class="post-title">{{ post.title }}</span>
-        <span class="post-meta">
-          <time :datetime="post.date">{{ formatDate(post.date) }}</time>
-          <template v-if="post.readingTime"> · {{ post.readingTime }}</template>
-        </span>
-      </RouterLink>
-    </li>
-  </ul>
 
   <template v-else>
     <section

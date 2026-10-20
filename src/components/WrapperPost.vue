@@ -152,7 +152,7 @@ onMounted(() => {
       </template>
     </p>
     <ul v-if="frontmatter.tags?.length" class="page-tags slide-enter" aria-label="Tags">
-      <li v-for="tag in frontmatter.tags" :key="tag" class="tag">
+      <li v-for="tag in frontmatter.tags" :key="tag">
         #{{ tag }}
       </li>
     </ul>

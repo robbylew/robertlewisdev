@@ -4,7 +4,7 @@ import { createRequire } from 'node:module'
 import { initWasm, Resvg } from '@resvg/resvg-wasm'
 import satori from 'satori'
 import { logoSvg } from '../../src/logo.ts'
-import { OG_IMAGE_SIZE, site } from '../../src/site.ts'
+import { OG_IMAGE_SIZE } from '../../src/site.ts'
 
 const require = createRequire(import.meta.url)
 
@@ -21,17 +21,11 @@ function h(type: string, style: Record<string, unknown>, ...children: Child[]): 
 
 export interface OgImageInput {
   title: string
-  description?: string
-  /** Small uppercase label in the top-right corner (e.g. "Blog"). */
-  label?: string
-  /** Bottom-left text, usually the page URL without protocol. */
+  /** One short, quiet line under the title (e.g. a job title or a post date). */
+  subtitle?: string
+  /** Shown at the bottom, usually the page URL without protocol. */
   url: string
-  /** Bottom-right text, e.g. "Mar 4, 2025 · 20 min read". */
-  meta?: string
 }
-
-const ACCENT = '#2dd4bf'
-const ACCENT_2 = '#818cf8'
 
 interface OgFont {
   name: string
@@ -70,87 +64,23 @@ function stripPictographs(text: string): string {
 }
 
 function titleFontSize(title: string): number {
-  if (title.length > 70)
-    return 52
-  if (title.length > 40)
-    return 62
-  return 76
+  if (title.length > 60)
+    return 60
+  if (title.length > 32)
+    return 72
+  return 88
 }
 
-function template({ title, description, label, url, meta }: OgImageInput): OgNode {
-  // The site's logo mark, light variant for the dark card background.
-  const badge: OgNode = {
+/** Deliberately minimal: logo, title, one quiet line and the URL. */
+function template({ title, subtitle, url }: OgImageInput): OgNode {
+  const logo: OgNode = {
     type: 'img',
     props: {
-      src: `data:image/svg+xml;base64,${Buffer.from(logoSvg({ background: '#fafafa', foreground: '#0a0a0a', size: 60 })).toString('base64')}`,
-      width: 60,
-      height: 60,
+      src: `data:image/svg+xml;base64,${Buffer.from(logoSvg({ background: '#fafafa', foreground: '#0a0a0a', size: 56 })).toString('base64')}`,
+      width: 56,
+      height: 56,
     },
   }
-
-  const header = h(
-    'div',
-    { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
-    h(
-      'div',
-      { display: 'flex', alignItems: 'center' },
-      badge,
-      h('div', { display: 'flex', marginLeft: 20, fontSize: 28, fontWeight: 600, color: '#e5e5e5' }, site.name),
-    ),
-    label
-      ? h('div', {
-          display: 'flex',
-          fontSize: 20,
-          fontWeight: 600,
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          color: ACCENT,
-          border: '1.5px solid rgba(45, 212, 191, 0.45)',
-          borderRadius: 999,
-          padding: '8px 20px',
-        }, label)
-      : null,
-  )
-
-  const body = h(
-    'div',
-    { display: 'flex', flexDirection: 'column', justifyContent: 'center', flexGrow: 1 },
-    h('div', {
-      display: 'block',
-      fontSize: titleFontSize(title),
-      fontWeight: 800,
-      lineHeight: 1.08,
-      letterSpacing: '-0.035em',
-      color: '#fafafa',
-      lineClamp: 3,
-    }, title),
-    description
-      ? h('div', {
-          display: 'block',
-          marginTop: 26,
-          fontSize: 30,
-          fontWeight: 400,
-          lineHeight: 1.4,
-          color: '#a3a3a3',
-          lineClamp: title.length <= 24 ? 3 : 2,
-        }, description)
-      : null,
-  )
-
-  const footer = h(
-    'div',
-    {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 28,
-      borderTop: '1.5px solid rgba(255, 255, 255, 0.12)',
-      fontSize: 24,
-      color: '#d4d4d4',
-    },
-    h('div', { display: 'flex', fontWeight: 600 }, url),
-    meta ? h('div', { display: 'flex', color: '#a3a3a3' }, meta) : null,
-  )
 
   return h(
     'div',
@@ -159,13 +89,30 @@ function template({ title, description, label, url, meta }: OgImageInput): OgNod
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
+      justifyContent: 'space-between',
+      padding: '80px 88px',
       backgroundColor: '#0a0a0a',
-      backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.20) 0%, rgba(10, 10, 10, 0) 45%), radial-gradient(circle at 0% 100%, rgba(129, 140, 248, 0.14) 0%, rgba(10, 10, 10, 0) 40%)',
+      backgroundImage: 'radial-gradient(circle at 85% 10%, rgba(45, 212, 191, 0.10) 0%, rgba(10, 10, 10, 0) 50%)',
       color: '#fafafa',
       fontFamily: 'Inter',
     },
-    h('div', { display: 'flex', flexDirection: 'column', flexGrow: 1, padding: '64px 72px 56px' }, header, body, footer),
-    h('div', { display: 'flex', height: 8, width: '100%', backgroundImage: `linear-gradient(90deg, ${ACCENT}, ${ACCENT_2})` }),
+    logo,
+    h(
+      'div',
+      { display: 'flex', flexDirection: 'column' },
+      h('div', {
+        display: 'block',
+        fontSize: titleFontSize(title),
+        fontWeight: 800,
+        lineHeight: 1.05,
+        letterSpacing: '-0.04em',
+        lineClamp: 2,
+      }, title),
+      subtitle
+        ? h('div', { display: 'flex', marginTop: 24, fontSize: 32, fontWeight: 400, color: '#a3a3a3' }, subtitle)
+        : null,
+    ),
+    h('div', { display: 'flex', fontSize: 26, fontWeight: 500, color: '#737373' }, url),
   )
 }
 
@@ -174,7 +121,7 @@ export async function renderOgImage(input: OgImageInput): Promise<Uint8Array> {
   const node = template({
     ...input,
     title: stripPictographs(input.title),
-    description: input.description ? stripPictographs(input.description) : undefined,
+    subtitle: input.subtitle ? stripPictographs(input.subtitle) : undefined,
   })
   // Satori expects React-element-shaped objects; our minimal `h()` produces exactly that.
   const svg = await satori(node as unknown as Parameters<typeof satori>[0], {

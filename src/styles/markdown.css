@@ -156,13 +156,57 @@ html.dark .prose {
 }
 
 /* Underline plain text links only — components style their own links. */
-.prose a:not([class]) {
-  border-bottom: 1px solid rgb(125 125 125 / 0.35);
-  transition: border-color 0.3s ease-in-out;
+.prose a:where(:not([class]), .font-mono) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgb(136 136 136 / 0.45);
+  text-underline-offset: 0.22em;
+  text-decoration-skip-ink: auto;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
 }
 
-.prose a:not([class]):hover {
-  border-bottom-color: var(--fg);
+.prose a:where(:not([class]), .font-mono):hover {
+  text-decoration-color: currentColor;
+}
+
+.prose a.font-mono {
+  font-size: 0.94em;
+}
+
+/* Home page credentials (job and degrees) */
+.prose .credentials {
+  margin: 1.5em 0 !important;
+  padding: 0 !important;
+  list-style: none;
+}
+
+.prose .credentials > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.6em;
+  margin: 0;
+  padding: 0.3em 0;
+}
+
+.prose .credentials > li > span {
+  color: var(--fg-light);
+}
+
+.prose .credentials > li > span::before {
+  content: '·';
+  margin-right: 0.6em;
+  opacity: 0.6;
+}
+
+.prose .credentials > li::before {
+  display: none;
+}
+
+.prose .find-me {
+  margin-bottom: 0 !important;
 }
 
 .prose a code {
@@ -315,31 +359,4 @@ a.header-anchor:focus {
 
 .code-wrap .line {
   white-space: break-spaces;
-}
-
-/* Inline chip links, e.g. schools on the home page */
-.prose .chip-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.1rem 0.5rem;
-  border: 1px solid var(--c-border);
-  border-radius: 0.5rem;
-  background: rgb(136 136 136 / 0.08);
-  color: var(--fg-deep);
-  font-weight: 500;
-  line-height: 1.5;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.prose .chip-link:hover {
-  border-color: var(--c-fg-faint);
-  background: rgb(136 136 136 / 0.16);
-}
-
-.prose .chip-link > [class^='i-'] {
-  font-size: 0.95em;
-  opacity: 0.75;
 }

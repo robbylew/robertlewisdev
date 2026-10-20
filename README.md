@@ -42,9 +42,9 @@ draft: true # optional: hidden from lists and marked noindex
 ---
 ```
 
-Other optional fields: `display` (visible H1 if different from `title`), `subtitle`, `seoTitle` (full `<title>` override), `image`/`imageAlt` (custom social image), `ogTitle`/`ogLabel` (generated card text), `noindex`, `art` (`plum`, `dots`, `random`, `none`), `tocAlwaysOn`. Put `[[toc]]` in a post for a table of contents and `<!-- @layout-full-width -->` to opt out of the reading-width layout.
+Other optional fields: `display` (visible H1 if different from `title`), `subtitle`, `seoTitle` (full `<title>` override), `image`/`imageAlt` (custom social image), `ogTitle` (generated card title), `noindex`, `art` (`plum`, `dots`, `random`, `none`), `tocAlwaysOn`. Put `[[toc]]` in a post for a table of contents and `<!-- @layout-full-width -->` to opt out of the reading-width layout.
 
-- **Projects** live in `src/data/projects.ts` (`featured: true` shows them on the home page).
+- **Projects** live in `src/data/projects.ts`.
 - **Resume** lives in `src/data/resume.ts`. The downloadable PDF is printed from the resume page, so after editing run `pnpm build && pnpm resume:pdf` and commit the new `public/Robert_Lewis_Resume.pdf`.
 - **Site-wide details** (name, job title, employer, socials, description, email) live in `src/site.ts`.
 

@@ -163,15 +163,17 @@ html {
 .page-tags {
   display: flex !important;
   flex-wrap: wrap;
-  gap: 0.375rem;
-  margin: 1rem 0 0 !important;
+  gap: 0.25rem 0.75rem;
+  margin: 0.5rem 0 0 !important;
   padding: 0 !important;
   list-style: none;
 }
 
 .prose .page-tags > li {
   margin: 0;
-  padding: 0.125rem 0.5rem;
+  padding: 0;
+  font-size: 0.875rem;
+  color: var(--c-fg-faint);
 }
 
 .prose .page-tags > li::before {

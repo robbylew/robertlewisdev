@@ -26,7 +26,6 @@ function toTop() {
     <nav class="mx-auto flex h-16 items-center justify-between gap-3 px-5 md:px-7" aria-label="Main">
       <RouterLink to="/" class="brand group focus-ring" :aria-label="`${site.name}, home`">
         <Logo class="h-8 w-8 shrink-0" />
-        <span class="brand-name hidden sm:block">{{ site.name }}</span>
       </RouterLink>
 
       <div class="flex items-center gap-0.5 sm:gap-1.5">
@@ -102,17 +101,6 @@ function toTop() {
   border-radius: 0.75rem;
   color: var(--c-fg);
   text-decoration: none;
-}
-
-.brand-name {
-  font-size: 0.975rem;
-  font-weight: 650;
-  letter-spacing: -0.015em;
-  transition: color 0.2s ease;
-}
-
-.brand:hover .brand-name {
-  color: var(--c-fg-muted);
 }
 
 .nav-link {

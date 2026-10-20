@@ -19,33 +19,20 @@ function escapeXml(value: string): string {
   return value.replace(/[<>&'"]/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' }[char]!))
 }
 
-function ogLabel(page: ContentPage): string | undefined {
-  if (typeof page.frontmatter.ogLabel === 'string')
-    return page.frontmatter.ogLabel
-  if (isPost(page))
-    return 'Blog'
-  const section = page.path.split('/')[1]
-  if (!section)
-    return undefined
-  if (section === 'blogs')
-    return 'Blog'
-  return section.charAt(0).toUpperCase() + section.slice(1)
-}
-
 async function writeOgImages(pages: ContentPage[], outDir: string): Promise<number> {
   const dir = path.join(outDir, 'og')
   await fs.mkdir(dir, { recursive: true })
   const targets = pages.filter(page => isIndexable(page) && !page.frontmatter.image)
   await Promise.all(targets.map(async (page) => {
     const { frontmatter } = page
+    const title = String(frontmatter.ogTitle ?? frontmatter.title ?? site.name)
+    const subtitle = isPost(page) && frontmatter.date
+      ? [formatDate(frontmatter.date), frontmatter.readingTime].filter(Boolean).join(' · ')
+      : page.path === '/' ? headline : `${site.name} · ${headline}`
     const png = await renderOgImage({
-      title: String(frontmatter.ogTitle ?? frontmatter.title ?? site.name),
-      description: frontmatter.description,
-      label: ogLabel(page),
+      title,
+      subtitle,
       url: `${site.domain}${page.path === '/' ? '' : page.path}`,
-      meta: isPost(page) && frontmatter.date
-        ? [formatDate(frontmatter.date), frontmatter.readingTime].filter(Boolean).join(' · ')
-        : headline,
     })
     await fs.writeFile(path.join(dir, ogImageName(page.path)), png)
   }))

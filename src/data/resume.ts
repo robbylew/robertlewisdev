@@ -131,6 +131,3 @@ const monthFormat = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'num
 export function formatMonth(yearMonth: string): string {
   return monthFormat.format(new Date(`${yearMonth}-01T00:00:00Z`))
 }
-
-/** Highlights shown on the home page (all taken from the resume above). */
-export const featuredSkills = ['Python', 'Go', 'SQL', 'TypeScript', 'AWS', 'GCP', 'Azure', 'Docker', 'Kubernetes', 'Terraform', 'Airflow', 'Spark', 'Kafka', 'dbt', 'PostgreSQL', 'MongoDB']

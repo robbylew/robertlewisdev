@@ -120,7 +120,7 @@ function print() {
           <dt>{{ group.label }}</dt>
           <dd>
             <ul class="chips" :aria-label="group.label">
-              <li v-for="skill in group.items" :key="skill" class="tag">
+              <li v-for="skill in group.items" :key="skill">
                 {{ skill }}
               </li>
             </ul>
@@ -143,7 +143,7 @@ function print() {
           </h3>
         </div>
         <ul class="chips" aria-label="Tech stack">
-          <li v-for="tech in project.stack" :key="tech" class="tag">
+          <li v-for="tech in project.stack" :key="tech">
             {{ tech }}
           </li>
         </ul>
@@ -263,15 +263,25 @@ function print() {
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
-  margin: 0.4rem 0 0 !important;
+  margin: 0.15rem 0 0 !important;
   padding: 0 !important;
   list-style: none;
+  color: var(--c-fg-muted);
 }
 
 .chips > li {
   margin: 0;
-  padding: 0.125rem 0.5rem;
+  padding: 0;
+}
+
+.chips > li:not(:last-child)::after {
+  content: '·';
+  margin: 0 0.5rem;
+  opacity: 0.6;
+}
+
+.resume-entry > .chips {
+  font-size: 0.875rem;
 }
 
 .highlights {
@@ -433,6 +443,8 @@ function print() {
 
   .chips > li:not(:last-child)::after {
     content: ', ';
+    margin: 0;
+    opacity: 1;
   }
 
   .resume-entry > .chips {

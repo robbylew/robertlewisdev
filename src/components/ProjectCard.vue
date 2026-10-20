@@ -22,14 +22,10 @@ defineProps<{ project: Project }>()
         <p class="mt-1.5 text-sm leading-relaxed color-muted">
           {{ project.description }}
         </p>
-        <ul v-if="project.tags?.length || project.private" class="mt-3 flex flex-wrap gap-1.5" aria-label="Technologies">
-          <li v-if="project.private" class="tag gap-1">
-            <span class="i-ri-lock-line text-[0.8em]" aria-hidden="true" />Private
-          </li>
-          <li v-for="tag in project.tags" :key="tag" class="tag">
-            {{ tag }}
-          </li>
-        </ul>
+        <p v-if="project.tags?.length || project.private" class="project-meta">
+          <span v-if="project.private" class="inline-flex items-center gap-1"><span class="i-ri-lock-line" aria-hidden="true" />Private</span>
+          <span v-for="tag in project.tags" :key="tag">{{ tag }}</span>
+        </p>
       </div>
     </div>
   </component>
@@ -73,18 +69,18 @@ a.project-card:hover .project-arrow {
   color: var(--c-fg);
 }
 
-.project-card ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0;
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--c-fg-faint);
 }
 
-.project-card ul > li {
-  margin: 0;
-  padding: 0.125rem 0.5rem;
-}
-
-.project-card ul > li::before {
-  display: none;
+.project-meta > span:not(:last-child)::after {
+  content: '·';
+  margin: 0 0.45rem;
+  opacity: 0.7;
 }
 </style>
