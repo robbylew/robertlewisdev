@@ -23,7 +23,7 @@ export const site = {
   lang: 'en',
   locale: 'en_US',
   twitter: '@roberthedev',
-  repo: 'https://github.com/robbylew/robertlewisdev-v2',
+  repo: 'https://github.com/robbylew/robertlewisdev',
   since: 2024,
   themeColor: {
     dark: '#050505',

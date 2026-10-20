@@ -64,7 +64,7 @@ export const projects: Record<string, Project[]> = {
   'Web Development': [
     {
       name: 'robertlewis.dev',
-      link: 'https://github.com/robbylew/robertlewisdev-v2',
+      link: 'https://github.com/robbylew/robertlewisdev',
       description: 'This website — statically generated with Vue, Vite, TypeScript and UnoCSS.',
       icon: 'i-simple-icons-vuedotjs',
       tags: ['Vue', 'TypeScript', 'UnoCSS'],

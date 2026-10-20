@@ -9,7 +9,7 @@
   "homepage": "https://robertlewis.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/robbylew/robertlewisdev-v2"
+    "url": "https://github.com/robbylew/robertlewisdev"
   },
   "engines": {
     "node": ">=22.12.0"
